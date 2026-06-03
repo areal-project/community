@@ -26,8 +26,8 @@ When reporting, please include:
 - Suggested mitigations, if you have them.
 
 You can expect an acknowledgement within **3 business days**. If you do not hear back
-within that window, please follow up via the same channel or contact another
-maintainer listed in [GOVERNANCE.md](GOVERNANCE.md).
+within that window, please follow up via the same channel or contact another maintainer
+listed in [GOVERNANCE.md](GOVERNANCE.md).
 
 ## Disclosure process
 
@@ -37,8 +37,8 @@ After a report is received, the maintainers will:
 1. Reproduce and assess the impact of the issue.
 1. Develop and validate a fix in a private branch or draft advisory.
 1. Coordinate a release and a public advisory with the reporter.
-1. Publicly disclose the issue after a fix is available, crediting the reporter
-   unless they request otherwise.
+1. Publicly disclose the issue after a fix is available, crediting the reporter unless
+   they request otherwise.
 
 We aim to resolve confirmed vulnerabilities and publish an advisory within **90 days**
 of the initial report. Embargo periods may be adjusted based on severity, complexity,
