@@ -2,8 +2,8 @@
 
 This document indexes the repositories that make up the **AReaL** ecosystem.
 
-Anything not listed here is not an official AReaL repository. If you maintain a
-project that integrates with AReaL and would like it referenced from the
+Anything not listed here is not an official AReaL repository. If you maintain a project
+that integrates with AReaL and would like it referenced from the
 [Community Projects](#community-projects) section, please open a pull request.
 
 ## Core repositories

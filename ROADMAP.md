@@ -1,8 +1,8 @@
 # Roadmap
 
 The authoritative AReaL roadmap is maintained in the **main project repository** at
-[areal-project/AReaL](https://github.com/areal-project/AReaL). This file is a pointer
-so contributors browsing the community repository can find it easily.
+[areal-project/AReaL](https://github.com/areal-project/AReaL). This file is a pointer so
+contributors browsing the community repository can find it easily.
 
 ## Where to look
 
@@ -20,10 +20,9 @@ so contributors browsing the community repository can find it easily.
 
 We welcome community input. The recommended flow is:
 
-1. **Search** existing
-   [issues](https://github.com/areal-project/AReaL/issues) and
-   [discussions](https://github.com/areal-project/AReaL/discussions) for prior work
-   on your idea.
+1. **Search** existing [issues](https://github.com/areal-project/AReaL/issues) and
+   [discussions](https://github.com/areal-project/AReaL/discussions) for prior work on
+   your idea.
 1. **Open a discussion** in the
    [Ideas category](https://github.com/areal-project/AReaL/discussions/categories/ideas)
    to gather feedback.
@@ -36,8 +35,8 @@ guide.
 
 ## Long-term vision
 
-Our vision for AReaL is to be the go-to framework for training reasoning and agentic
-AI systems that is:
+Our vision for AReaL is to be the go-to framework for training reasoning and agentic AI
+systems that is:
 
 1. **Accessible** — easy to get started for both researchers and practitioners.
 1. **Scalable** — runs from a single workstation to multi-thousand-GPU clusters.

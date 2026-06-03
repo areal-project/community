@@ -26,8 +26,8 @@ There are many ways to participate, regardless of your background:
 - **Report issues** or propose features in the
   [main issue tracker](https://github.com/areal-project/AReaL/issues).
 - **Improve documentation**, translations, or examples in the main repository.
-- **Join community meetings.** AReaL holds regular community calls; meeting notes and recordings are linked from the main project's
-  [community materials](./meeting).
+- **Join community meetings.** AReaL holds regular community calls; meeting notes and
+  recordings are linked from the main project's [community materials](./meeting).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
@@ -39,5 +39,5 @@ are all documented there.
 
 ## License
 
-All content in this repository is licensed under the
-[Apache License 2.0](LICENSE), the same license used by the main AReaL project.
+All content in this repository is licensed under the [Apache License 2.0](LICENSE), the
+same license used by the main AReaL project.
