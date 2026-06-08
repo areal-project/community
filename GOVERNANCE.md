@@ -32,6 +32,7 @@ maintainer approvals are required to merge a pull request (see
 | Bingye Chen  | ByteDance                 | @TaoZex               |
 | Zhihao Guo   | Xiaomi                    | @guozhihao-224        |
 | Ming Li      | AReaL Team, Ant Group     | @sitabulaixizawaluduo |
+| Huaqing Yuan | Tencent                   | @HT-Yuan              |
 
 ### Lead Maintainer (BDFL)
 
@@ -76,7 +77,7 @@ constructive participation in the project.
 ## Code of Conduct
 
 All participants are expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
-Violations can be reported to <fuwth17@gmail.com>.
+Violations can be reported to fuwth17@gmail.com.
 
 ## Amendments
 
