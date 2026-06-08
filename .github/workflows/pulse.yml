@@ -1,0 +1,44 @@
+name: Weekly Pulse Report
+
+on:
+  schedule:
+    - cron: "30 1 * * 5"
+
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Lookback window in days (min 7, max 30)"
+        required: false
+        default: "7"
+        type: string
+      language:
+        description: "Output language for the AI summary (auto / English / Chinese / zh / ja / ...)"
+        required: false
+        default: "auto"
+        type: string
+
+jobs:
+  pulse:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run gh-pulse-scout
+        id: pulse
+        uses: oss-infra/gh-pulse-scout@v1.1.0
+        with:
+          repo: 'areal-project/AReaL'
+          days: ${{ github.event.inputs.days || '7' }}
+          language: ${{ github.event.inputs.language || 'auto' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          openai-base-url: ${{ secrets.OPENAI_BASE_URL }}
+          openai-model: ${{ secrets.OPENAI_MODEL }}
+
+      # For demonstration purposes, also print the report in this job's summary and logs.
+      - name: Result
+        run: echo "🍏 This job's status is ${{ job.status }}."
