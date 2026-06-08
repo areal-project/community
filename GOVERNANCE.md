@@ -59,13 +59,14 @@ Pull request approval policy:
 
 - All pull requests require approval from at least **two maintainers** before they can
   be merged. At least one approval must come from a code owner of the modified paths
-  (see [`.github/CODEOWNERS`](.github/CODEOWNERS)).
+  (see
+  [`.github/CODEOWNERS`](https://github.com/areal-project/areal/blob/main/.github/CODEOWNERS)).
 - The **lead maintainer**, acting as repository administrator, may bypass the
   two-approval requirement for trivial or time-sensitive changes as described in the
   [Lead Maintainer](#lead-maintainer-bdfl) section.
 - The branch protection rules on `main` are documented in
-  [`.github/ruleset.json`](.github/ruleset.json) and are the source of truth for
-  mechanical enforcement of this policy.
+  [`.github/ruleset.json`](https://github.com/areal-project/areal/blob/main/.github/ruleset.json)
+  and are the source of truth for mechanical enforcement of this policy.
 
 ## Becoming a Maintainer
 
