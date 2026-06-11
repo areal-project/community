@@ -16,28 +16,85 @@ on:
         required: false
         default: "auto"
         type: string
+      target_branch:
+        description: "Base branch for the generated pull request"
+        required: false
+        default: "main"
+        type: string
+      assignees:
+        description: "Comma-separated GitHub usernames to assign to the pull request"
+        required: false
+        default: "mingcheng"
+        type: string
 
 jobs:
   pulse:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       issues: read
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Get current timestamp
+        uses: mingcheng/get-timestamp-action@v1.1.0
+        id: timestamp
+        with:
+          format: "%Y-%m-%d"
+          timezone: "Asia/Shanghai"
+
+      - name: Prepare variables
+        run: |
+          # Variables written to $GITHUB_ENV are only available in later steps,
+          # so reference the step output directly here instead of env.DATE.
+          echo "DATE=${{ steps.timestamp.outputs.timestamp }}" >> $GITHUB_ENV
+          echo "SOURCE_BRANCH=weekly-pulse-report/${{ steps.timestamp.outputs.timestamp }}" >> $GITHUB_ENV
+          echo "TARGET_BRANCH=${{ github.event.inputs.target_branch || 'main' }}" >> $GITHUB_ENV
+          echo "ASSIGNEES=${{ github.event.inputs.assignees || 'mingcheng' }}" >> $GITHUB_ENV
 
       - name: Run gh-pulse-scout
         id: pulse
         uses: oss-infra/gh-pulse-scout@v1.1.0
         with:
-          repo: 'areal-project/AReaL'
+          repo: "areal-project/AReaL"
           days: ${{ github.event.inputs.days || '7' }}
           language: ${{ github.event.inputs.language || 'auto' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           openai-base-url: ${{ secrets.OPENAI_BASE_URL }}
           openai-model: ${{ secrets.OPENAI_MODEL }}
+
+      - name: Write generated report
+        run: |
+          mkdir -p reports
+          cat <<'EOF' > reports/${{ env.DATE }}.md
+          ${{ steps.pulse.outputs.report }}
+          EOF
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Add weekly pulse report for ${{ env.DATE }}"
+          add-paths: reports/${{ env.DATE }}.md
+          branch: ${{ env.SOURCE_BRANCH }}
+          base: ${{ env.TARGET_BRANCH }}
+          title: "🔄 Weekly pulse report: ${{ env.DATE }}"
+          body: |
+            This Pull Request was created automatically to summarize the repository's activity in the past ${{ github.event.inputs.days || '7' }} days using AI.
+
+            📅 **Created**: ${{ env.DATE }}
+            🤖 **Triggered by**: ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Scheduled' }}
+
+            Please review and merge if everything looks good.
+          labels: |
+            auto-generated
+            weekly-pulse-report
+          draft: false
+          delete-branch: true
+          assignees: ${{ env.ASSIGNEES }}
 
       # For demonstration purposes, also print the report in this job's summary and logs.
       - name: Result
