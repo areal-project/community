@@ -10,6 +10,8 @@ Please review our [Code of Conduct](CODE_OF_CONDUCT.md) before participating and
 ## Table of Contents
 
 - [Quick Start](#quick-start)
+- [Sign Your Work: Developer Certificate of Origin (DCO)](#sign-your-work-developer-certificate-of-origin-dco)
+- [Licensing of Contributions](#licensing-of-contributions)
 - [Tips for Using AI-Assisted Coding](#tips-for-using-ai-assisted-coding)
 - [CI/CD](#cicd)
 
@@ -34,8 +36,9 @@ Please review our [Code of Conduct](CODE_OF_CONDUCT.md) before participating and
    ```bash
    # Install hooks (includes formatting, linting, and commit message checks)
    pre-commit install --install-hooks
-   # Subsequent commits will automatically check your files and commit messages:
-   git commit -a -m 'feat(engine): my change'
+   # Subsequent commits will automatically check your files and commit messages.
+   # Use -s to add the required Developer Certificate of Origin sign-off (see below):
+   git commit -s -a -m 'feat(engine): my change'
    ```
 
 1. **Find an Issue:**
@@ -94,6 +97,84 @@ Use that in `claude`, `opencode`, or any other coding agent CLI.
 issue or open a draft PR to discuss with the core developers before making any code
 changes. Directly opening a PR that conflicts with our future [roadmap](ROADMAP.md) may
 waste your effort.
+
+## Sign Your Work: Developer Certificate of Origin (DCO)
+
+Following common open-source and Linux Foundation practice, AReaL requires every commit
+to be **signed off** under the
+[Developer Certificate of Origin (DCO)](https://developercertificate.org/), version 1.1.
+The DCO is a lightweight way for contributors to certify that they wrote the
+contribution, or otherwise have the right to submit it under the project's open-source
+license. We use the DCO instead of a Contributor License Agreement (CLA).
+
+To sign off, add a `Signed-off-by` line to each commit message using your real name and
+an email address you can be reached at:
+
+```text
+Signed-off-by: Jane Doe <jane.doe@example.com>
+```
+
+Git can add this line for you automatically with the `-s` (or `--signoff`) flag:
+
+```bash
+git commit -s -m 'feat(engine): my change'
+```
+
+If you forget to sign off, you can amend the most recent commit:
+
+```bash
+git commit --amend -s --no-edit
+```
+
+or sign off a range of earlier commits with an interactive rebase:
+
+```bash
+git rebase --signoff HEAD~<number-of-commits>
+```
+
+Pull requests whose commits are not signed off cannot be merged. By signing off, you
+make the certification reproduced below.
+
+<details>
+<summary>Developer Certificate of Origin 1.1</summary>
+
+```text
+By making a contribution to this project, I certify that:
+
+(a) The contribution was created in whole or in part by me and I
+    have the right to submit it under the open source license
+    indicated in the file; or
+
+(b) The contribution is based upon previous work that, to the best
+    of my knowledge, is covered under an appropriate open source
+    license and I have the right under that license to submit that
+    work with modifications, whether created in whole or in part
+    by me, under the same open source license (unless I am
+    permitted to submit under a different license), as indicated
+    in the file; or
+
+(c) The contribution was provided directly to me by some other
+    person who certified (a), (b) or (c) and I have not modified
+    it.
+
+(d) I understand and agree that this project and the contribution
+    are public and that a record of the contribution (including all
+    personal information I submit with it, including my sign-off) is
+    maintained indefinitely and may be redistributed consistent with
+    this project or the open source license(s) involved.
+```
+
+</details>
+
+## Licensing of Contributions
+
+AReaL is released under the [Apache License 2.0](LICENSE). Unless explicitly stated
+otherwise, all contributions you submit are accepted under the same license on an
+"inbound = outbound" basis: the terms under which you contribute are the same terms
+under which the project is distributed. Do not submit code, documentation, datasets, or
+other material that you are not authorized to contribute under this license, and
+properly credit any third-party sources as required by the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Tips for Using AI-Assisted Coding
 
