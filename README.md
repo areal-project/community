@@ -37,6 +37,15 @@ The project is governed as described in [GOVERNANCE.md](GOVERNANCE.md). The list
 current maintainers, the decision-making process, and the path to becoming a maintainer
 are all documented there.
 
+## Community
+
+<img src="./assets/wechat_qrcode.png" width="200" alt="WeChat QR Code">
+
+We warmly welcome everyone to join our community! We have a _**WeChat group**_ for
+real-time discussions and a
+[GitHub discussion board](https://github.com/areal-project/AReaL/discussions) for
+asynchronous conversations.
+
 ## License
 
 All content in this repository is licensed under the [Apache License 2.0](LICENSE), the
