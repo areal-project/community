@@ -83,8 +83,7 @@ jobs:
           pip install pre-commit
           # Run the Markdown formatting hooks on the generated report only.
           # pre-commit exits non-zero when it reformats a file, so don't fail the job.
-          pre-commit run mdformat end-of-file-fixer trailing-whitespace \
-            --files reports/${{ env.DATE }}.md || true
+          pre-commit run --files reports/${{ env.DATE }}.md || true
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8.1.1
