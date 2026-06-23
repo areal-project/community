@@ -124,7 +124,7 @@ skipped.
    1. Repair: There is no possible repair in cases of this severity.
 
 This enforcement ladder is intended as a guideline. It does not limit the ability of
-Community Managers to use their discretion and judgment, in keeping with the best
+Community Moderators to use their discretion and judgment, in keeping with the best
 interests of our community.
 
 ## Scope
