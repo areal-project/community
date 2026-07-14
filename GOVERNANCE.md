@@ -162,8 +162,9 @@ A fuller list of channels is kept in the [README](README.md#community--communica
 ## Code of Conduct
 
 All participants are expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
-Violations can be reported privately to the Community Moderators (the current
-Maintainers) at <fuwth17@gmail.com>.
+Violations can be reported privately to at <areal-security@googlegroups.com> or to the
+Community Moderators (the current Maintainers listed in
+[roles/Maintainers.md](roles/Maintainers.md)).
 
 ## Feedback
 

@@ -16,8 +16,8 @@ To report a vulnerability, use one of the following private channels:
    [areal-project/AReaL](https://github.com/areal-project/AReaL/security/advisories)),
    open **Advisories**, and click **Report a vulnerability**.
 1. **Email.** If you cannot use GitHub advisories, send an email to the
-   [Security Team](roles/Security-Team.md) at **<fuwth17@gmail.com>**. Encrypt sensitive
-   details if possible.
+   [Security Team](roles/Security-Team.md) at **<areal-security@googlegroups.com>**.
+   Encrypt sensitive details if possible.
 
 When reporting, please include:
 
