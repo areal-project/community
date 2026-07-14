@@ -259,6 +259,16 @@ from the same company or organization. If an election would exceed this limit, o
 top vote recipients up to the limit serve, and additional seats are filled by the next
 highest vote recipients from other organizations.
 
+If this limit is exceeded outside of an election, it is resolved as follows:
+
+- **Standing excess** (an organization is already above the limit when this rule takes
+  effect): no new Maintainer nominations from that organization are accepted until its
+  share returns to at or below the limit through normal turnover.
+- **Excess by attrition** (the departure of Maintainers from other organizations pushes
+  one organization above the limit): a special election is triggered within 30 days to
+  fill the vacated seats, giving priority to qualified candidates from other
+  organizations until the limit is restored.
+
 #### Vacancies
 
 If an elected Maintainer leaves, the candidate with the next most votes from the

@@ -63,14 +63,6 @@ We welcome your feedback. Share product ideas in
 community-process feedback in an issue labeled `governance` in this repository or at a
 community meeting. See [GOVERNANCE.md](GOVERNANCE.md#feedback) for details.
 
-## Community
-
-<img src="./assets/wechat_qrcode.png" width="200" alt="WeChat QR Code">
-
-We warmly welcome everyone to join our community! We have a _**WeChat group**_ for
-real-time discussions and a
-[GitHub discussion board](https://github.com/areal-project/AReaL/discussions) for
-asynchronous conversations.
 
 ## Community
 
