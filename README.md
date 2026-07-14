@@ -63,7 +63,6 @@ We welcome your feedback. Share product ideas in
 community-process feedback in an issue labeled `governance` in this repository or at a
 community meeting. See [GOVERNANCE.md](GOVERNANCE.md#feedback) for details.
 
-
 ## License
 
 All content in this repository is licensed under the [Apache License 2.0](LICENSE), the
