@@ -5,7 +5,7 @@ vulnerabilities and maintaining the security posture of the project.
 
 ## Composition
 
-The Security Team consists of all current active Maintainers as listed in
+The Security Team consists of all current Maintainers as listed in
 [Maintainers.md](Maintainers.md). All Maintainers are members of the Security Team by
 virtue of their role.
 
