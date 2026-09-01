@@ -14,7 +14,7 @@ For background on how the project is governed and how to participate, please see
 
 | Date       | Agenda | Slides | Recording |
 | ---------- | ------ | ------ | --------- |
-| 2026/08/08 | TBD    | TBD    | TBD       |
+| 2026/09/19 | TBD    | TBD    | TBD       |
 
 ## Past Meetings
 
@@ -27,6 +27,8 @@ For background on how the project is governed and how to participate, please see
 | 2026/06/13 | [Google Doc](https://docs.google.com/document/d/1dRUlz7csr1nEzNXyZbj8ugOChaaCviSxKIocrVTWfKM/edit?usp=sharing) | [Google Slides](https://drive.google.com/file/d/1mSSBGapMRxP5a2W7AeZYrSEQb-2EfR5o/view?usp=sharing)                                                                                                                                                | [Tencent Meeting (Chinese)](https://meeting.tencent.com/crm/KPLm9GLYc8) |
 | 2026/07/11 | [Google Doc](https://docs.google.com/document/d/1-eA2nVv8RxMFZwUgkUVZnH1qwA3j2tVL-Qv52YQ3ILk/edit?usp=sharing) |                                                                                                                                                                                                                                                    | [Tencent Meeting (Chinese)](https://meeting.tencent.com/ctm/K0JnpYj062) |
 | 2026/07/24 | [Google Doc](https://docs.google.com/document/d/1LYTD5SA2Jie74MHtFGzPntDqU1ea2fSJ_da29h96fO4/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/1UXPOPSTrbBfKwC9ZPu-gnkJV6eNGd0gmXz5G7ZZyXMk/edit?usp=sharing)                                                                                                                              | [Tencent Meeting (Chinese)](https://meeting.tencent.com/ctm/K0JnpYj04d) |
+| 2026/08/08 | [Google Doc](https://docs.google.com/document/d/1sc8iWJFOBJlMdn8NLjuIylTxM7smk5mF1uQ6Iyb3wPc/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/13WU1DfPikR1u9wtWZ7B_Nuk80ue9OUPoPbpGJIiOAZw/edit?usp=sharing)                                                                                                                              | [Tencent Meeting (Chinese)](https://meeting.tencent.com/ctm/2YYaZnQo7b) |
+| 2026/08/22 | [Google Doc](https://docs.google.com/document/d/1c7nHm5aGPOsOsx8mW5GV4dZiYSPorvOVVi9N99W0IzQ/edit?usp=sharing) |                                                                                                                                                                                                                                                    | [Tencent Meeting (Chinese)](https://meeting.tencent.com/ctm/2YYaZnQo7f) |
 
 ## How to Add Materials
 
