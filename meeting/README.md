@@ -14,11 +14,11 @@ For background on how the project is governed and how to participate, please see
 
 | Date       | Agenda | Slides | Recording |
 | ---------- | ------ | ------ | --------- |
-| 2026/09/19 | TBD    | TBD    | TBD       |
+| 2026/10/31 | TBD    | TBD    | TBD       |
 
 ## Past Meetings
 
-| Date       | Agenda                                                                                                         | Slides                                                                                                                                                                                                                                             | Recording                                                               |
+| Date       | Agenda                                                                                                         | Slides                                                                                                                                                                                                                                             | Recording / Transcript                                                  |
 | ---------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | 2026/04/18 | [Google Doc](https://docs.google.com/document/d/1t4JSoXuPgtMsjAHio4keh3PM1elDeQAXC_BZGnv9kco/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/1MaZL2Tq39YPYQYIIWNiKaBo2MonLLbW-/edit?usp=sharing&ouid=102752648406195568586&rtpof=true&sd=true)                                                                                           | [Tencent Meeting (Chinese)](https://meeting.tencent.com/crm/2MW8w0q6ef) |
 | 2026/05/01 | [Google Doc](https://docs.google.com/document/d/1w106Eoj2rMX702EXX56Qz8OeD255Fx-36iLarL6Hi0M/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/1TXpSInTA4TLWfiOA6Fu5cZlgfM8ysHA3/edit?usp=sharing&ouid=102752648406195568586&rtpof=true&sd=true), [AReaL-DTA Talk](https://drive.google.com/file/d/1RMCDPwMwLKLyUqpM4bhFt4uBJjnhzETA/view) | [Tencent Meeting (Chinese)](https://meeting.tencent.com/crm/2BYLvJvdc5) |
@@ -29,6 +29,9 @@ For background on how the project is governed and how to participate, please see
 | 2026/07/24 | [Google Doc](https://docs.google.com/document/d/1LYTD5SA2Jie74MHtFGzPntDqU1ea2fSJ_da29h96fO4/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/1UXPOPSTrbBfKwC9ZPu-gnkJV6eNGd0gmXz5G7ZZyXMk/edit?usp=sharing)                                                                                                                              | [Tencent Meeting (Chinese)](https://meeting.tencent.com/ctm/K0JnpYj04d) |
 | 2026/08/08 | [Google Doc](https://docs.google.com/document/d/1sc8iWJFOBJlMdn8NLjuIylTxM7smk5mF1uQ6Iyb3wPc/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/13WU1DfPikR1u9wtWZ7B_Nuk80ue9OUPoPbpGJIiOAZw/edit?usp=sharing)                                                                                                                              | [Tencent Meeting (Chinese)](https://meeting.tencent.com/ctm/2YYaZnQo7b) |
 | 2026/08/22 | [Google Doc](https://docs.google.com/document/d/1c7nHm5aGPOsOsx8mW5GV4dZiYSPorvOVVi9N99W0IzQ/edit?usp=sharing) |                                                                                                                                                                                                                                                    | [Tencent Meeting (Chinese)](https://meeting.tencent.com/ctm/2YYaZnQo7f) |
+| 2026/10/17 | [Google Doc](https://docs.google.com/document/d/1N0XIU9RjTZPb8VxWy0hHYTEBNhG9XCP4lXCUhawTvdM/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/1kaK27lzCHllAc5aypOTZrnD_VzZ4lHvrDZOnj-hi_sw/edit?usp=sharing), [Score Centering HTML](score-centering-2026-10-17.html)                                                                     | [DingTalk transcript (Chinese)][2026-10-17-recording]                   |
+
+[2026-10-17-recording]: https://shanji.dingtalk.com/app/transcribes/76327569643438393039353834355f343632303933343536335f30
 
 ## How to Add Materials
 
@@ -39,4 +42,5 @@ After each meeting, add a new row to the **Past Meetings** table with:
   a file in this folder)
 - **Slides** -- link to the slide deck or place the PDF/PPTX in this folder and link it
   here
-- **Recording** -- link to the video recording (e.g. Zoom, Tencent Meeting, Dingding)
+- **Recording / Transcript** -- link to the recording or transcript (e.g. Zoom,
+  Tencent Meeting, DingTalk)
