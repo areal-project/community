@@ -31,8 +31,6 @@ For background on how the project is governed and how to participate, please see
 | 2026/08/22 | [Google Doc](https://docs.google.com/document/d/1c7nHm5aGPOsOsx8mW5GV4dZiYSPorvOVVi9N99W0IzQ/edit?usp=sharing) |                                                                                                                                                                                                                                                    | [Tencent Meeting (Chinese)](https://meeting.tencent.com/ctm/2YYaZnQo7f) |
 | 2026/10/17 | [Google Doc](https://docs.google.com/document/d/1N0XIU9RjTZPb8VxWy0hHYTEBNhG9XCP4lXCUhawTvdM/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/1kaK27lzCHllAc5aypOTZrnD_VzZ4lHvrDZOnj-hi_sw/edit?usp=sharing), [Score Centering HTML](score-centering-2026-10-17.html)                                                                     | [DingTalk transcript (Chinese)][2026-10-17-recording]                   |
 
-[2026-10-17-recording]: https://shanji.dingtalk.com/app/transcribes/76327569643438393039353834355f343632303933343536335f30
-
 ## How to Add Materials
 
 After each meeting, add a new row to the **Past Meetings** table with:
@@ -42,5 +40,7 @@ After each meeting, add a new row to the **Past Meetings** table with:
   a file in this folder)
 - **Slides** -- link to the slide deck or place the PDF/PPTX in this folder and link it
   here
-- **Recording / Transcript** -- link to the recording or transcript (e.g. Zoom,
-  Tencent Meeting, DingTalk)
+- **Recording / Transcript** -- link to the recording or transcript (e.g. Zoom, Tencent
+  Meeting, DingTalk)
+
+[2026-10-17-recording]: https://shanji.dingtalk.com/app/transcribes/76327569643438393039353834355f343632303933343536335f30
