@@ -1,8 +1,8 @@
 ---
 name: Departure Notice
 about: Formal notice for a community member stepping down from a role
-title: "Departure Notice: [Your Name]"
-labels: ["departure", "community"]
+title: 'Departure Notice: [Your Name]'
+labels: [departure, community]
 ---
 
 This template helps community members formally announce that they are stepping down from
