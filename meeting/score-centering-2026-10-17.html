@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Score Centering｜AReaL 技术分享</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;800&family=Source+Serif+4:ital,wght@0,600;0,800;1,600&family=STIX+Two+Text:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+/* ============ Tokens ============
+   一套语义色贯穿全篇：teal = 训练侧 p，amber = rollout 侧 q，magenta = 漂移 / 差值。
+   画布固定 1600×900，按窗口等比缩放。 */
+:root{
+  --paper:#F1F3F6; --card:#FFFFFF; --ink:#0D1526; --ink2:#3B475B; --mute:#66728A; --rule:#C9D1DC;
+  --p:#0B766F; --ps:#D8EEEB;
+  --q:#D1700F; --qi:#9C4A05; --qs:#FAE6D0;
+  --d:#BE1F58; --ds:#F9DCE7;
+  --night:#0A1221; --n-ink:#EEF2F8; --n-mute:#9AA8BD; --n-rule:#2A3955; --np:#5BDACC; --nq:#FFB866; --nd:#FF86AF;
+  --serif:"Source Serif 4","Noto Serif SC","Songti SC","Source Han Serif SC",STSong,serif;
+  --sans:"IBM Plex Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --math:"STIX Two Text","Cambria Math","Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#04070D}
+body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+p{margin:0}
+a{color:inherit}
+
+/* ============ Stage ============ */
+.stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;background:var(--paper);overflow:hidden;transform:translate(-50%,-50%) scale(var(--s,1));transform-origin:center center}
+.slide{position:absolute;inset:0;display:none;padding:118px 88px 92px;background:var(--paper);color:var(--ink)}
+.slide.active{display:flex;flex-direction:column;animation:fade .3s ease both}
+.slide>aside{display:none}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.slide.night{
+  --ink:var(--n-ink); --ink2:#C3CEDD; --mute:var(--n-mute); --rule:var(--n-rule);
+  --p:var(--np); --q:var(--nq); --qi:var(--nq); --d:var(--nd); --card:#111C30;
+  background:radial-gradient(900px 620px at 86% 22%,rgba(91,218,204,.09),transparent 62%),var(--night);
+}
+
+/* running header */
+.run{position:absolute;left:88px;right:88px;top:42px;display:flex;justify-content:space-between;align-items:center;font-size:17px;color:var(--mute)}
+.run .sec{display:inline-flex;align-items:center;gap:14px;color:var(--ink);font-weight:600}
+.run .sec:before{content:"";width:30px;height:2px;background:var(--ink)}
+.run .pg{font-variant-numeric:tabular-nums;letter-spacing:.04em}
+
+/* ============ Type ============ */
+h2{font-family:var(--serif);font-weight:800;font-size:50px;line-height:1.2;letter-spacing:-.012em;margin:0 0 26px;max-width:1320px;text-wrap:balance}
+h3{font-size:24px;font-weight:600;line-height:1.3;margin:0 0 10px}
+.lead{font-size:25px;line-height:1.6;color:var(--ink2);max-width:800px}
+.body{font-size:20px;line-height:1.65;color:var(--ink2)}
+.sm{font-size:17px;line-height:1.6;color:var(--mute)}
+.label{font-size:18px;font-weight:600;margin-bottom:10px;color:var(--mute)}
+.cp{color:var(--p)}.cq{color:var(--qi)}.cd{color:var(--d)}
+code,.mono{font-family:var(--mono);font-size:.86em}
+.spacer{flex:1}
+
+/* math */
+.m,.eq{font-family:var(--math);letter-spacing:0}
+.m{white-space:nowrap}
+.eq{font-size:44px;line-height:1.4;color:var(--ink)}
+.m sub,.m sup,.eq sub,.eq sup{font-size:.62em;line-height:0}
+.m sub,.eq sub{vertical-align:-.3em}
+.m sup,.eq sup{vertical-align:.55em}
+.E{font-style:normal}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.2;margin:0 .15em}
+.fr>span{padding:0 .25em;white-space:nowrap}
+.fr>span:first-child{border-bottom:.055em solid currentColor;padding-bottom:.1em}
+.fr>span:last-child{padding-top:.1em}
+
+/* layout helpers */
+.cols{display:grid}
+.cols>*{padding:0 36px;border-left:1px solid var(--rule)}
+.cols>*:first-child{padding-left:0;border-left:0}
+.cols>*:last-child{padding-right:0}
+.c2{grid-template-columns:1fr 1fr}.c3{grid-template-columns:repeat(3,1fr)}
+.split{display:grid;gap:72px;align-items:start}
+.pull{border-left:4px solid var(--d);padding:4px 0 4px 26px;font-family:var(--serif);font-size:27px;line-height:1.55;color:var(--ink)}
+.pull b{font-weight:800}
+.note{border-left:3px solid var(--p);padding:6px 0 6px 20px;font-size:19px;line-height:1.6;color:var(--ink2)}
+.note b{color:var(--ink);font-weight:600}
+.note.d{border-color:var(--d)}.note.q{border-color:var(--q)}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:28px 32px}
+svg text{font-family:var(--sans)}
+.fill-p{fill:var(--p)}.fill-q{fill:var(--q)}.fill-d{fill:var(--d)}
+
+/* grow-in motion: the one recurring gesture (bars draw in when a slide opens) */
+.slide.active .gx{animation:gx .9s cubic-bezier(.2,.8,.2,1) both;transform-box:fill-box;transform-origin:left center;animation-delay:calc(var(--i,0)*70ms + .15s)}
+.slide.active .gy{animation:gy .9s cubic-bezier(.2,.8,.2,1) both;transform-box:fill-box;transform-origin:center bottom;animation-delay:calc(var(--i,0)*60ms + .15s)}
+.slide.active .gyt{animation:gy .9s cubic-bezier(.2,.8,.2,1) both;transform-box:fill-box;transform-origin:center top;animation-delay:calc(var(--i,0)*60ms + .15s)}
+@keyframes gx{from{transform:scaleX(0)}}
+@keyframes gy{from{transform:scaleY(0)}}
+
+/* ============ 01 Cover ============ */
+.cover{display:grid;grid-template-columns:780px 1fr;gap:20px;flex:1;align-items:center;margin-top:-34px}
+.kick{font-size:21px;font-weight:500;color:var(--p);margin-bottom:22px}
+.ttl{font-family:var(--serif);font-weight:800;font-size:152px;line-height:.93;letter-spacing:-.035em;margin:0 0 34px}
+.cover .lead{font-size:26px;max-width:640px}
+.tags{display:flex;margin-top:34px;font-size:19px;font-weight:500}
+.tags span{padding:0 22px;border-left:1px solid var(--rule)}
+.tags span:first-child{padding-left:0;border-left:0}
+.cover .meta{margin-top:30px;font-size:17px;color:var(--mute)}
+.cover svg{width:100%;height:auto;display:block}
+
+/* ============ 02 Pipeline ============ */
+.pipe{display:grid;grid-template-columns:repeat(5,1fr);position:relative;margin:4px 0 34px}
+.pipe:before{content:"";position:absolute;left:0;right:0;top:11px;height:2px;background:var(--rule)}
+.step{position:relative;padding:40px 26px 0 0}
+.step:before{content:"";position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--paper);border:4px solid var(--ink)}
+.step.q:before{background:var(--q);border-color:var(--q)}
+.step.p:before{background:var(--p);border-color:var(--p)}
+.step b{display:block;font-size:24px;font-weight:600;margin-bottom:6px}
+.step span{display:block;font-size:18px;line-height:1.5;color:var(--mute)}
+.step .m{font-size:21px;font-style:italic}
+
+/* ============ 04 PG basics ============ */
+.bigm{font-size:46px;line-height:1.3;margin:6px 0 16px;min-height:78px;display:flex;align-items:center}
+.eqband{display:grid;grid-template-columns:auto 1fr;gap:64px;align-items:center;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:26px 0;margin-top:34px}
+.eqband .eq{font-size:58px}
+
+/* ============ 05 derivation ============ */
+.der{display:grid;grid-template-columns:1fr auto;column-gap:26px;row-gap:22px;align-items:baseline}
+.der .eq{font-size:32px;white-space:nowrap}
+.der .why{font-size:17px;color:var(--mute);font-family:var(--math);font-style:italic;white-space:nowrap}
+.state{display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-top:34px}
+.state>div{border-top:4px solid var(--p);padding-top:16px}
+.state>div.bad{border-color:var(--d)}
+.state .eq{font-size:34px}
+
+/* ============ 06 decomposition ============ */
+.decomp{display:grid;grid-template-columns:auto auto auto auto auto;justify-content:start;align-items:baseline;column-gap:20px;row-gap:12px;margin-bottom:34px}
+.decomp .eq{font-size:46px;white-space:nowrap}
+.decomp .u{height:5px;border-radius:3px}
+.decomp .t{font-size:19px;font-weight:600}
+
+/* ============ 08 vocab ============ */
+.steps{display:grid;gap:0}
+.steps>div{padding:20px 0 22px;border-top:1px solid var(--rule)}
+.steps>div:first-child{border-top:0;padding-top:0}
+.steps .eq{font-size:34px;margin:8px 0 10px}
+
+/* ============ 09 variants ============ */
+.two-var{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:16px 0 22px;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.two-var>div{padding:16px 22px;background:var(--card)}
+.two-var>div+div{border-left:1px solid var(--rule)}
+.two-var b{font-size:20px;font-weight:600;display:block;margin-bottom:4px}
+
+/* ============ 10 engineering ============ */
+.sys{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin:8px 0 30px}
+.grp{font-size:17px;font-weight:600;padding:0 0 10px;border-bottom:4px solid var(--ink)}
+.grp.q{grid-column:span 3;border-color:var(--q);color:var(--qi)}
+.grp.p{grid-column:span 2;border-color:var(--p);color:var(--p)}
+.stg{padding:20px 22px 0 0;position:relative}
+.stg+.stg:before{content:"›";position:absolute;left:-14px;top:14px;font-size:34px;line-height:1;color:var(--mute)}
+.stg .n{font-family:var(--mono);font-size:15px;color:var(--mute)}
+.stg b{display:block;font-size:23px;font-weight:600;margin:2px 0 4px}
+.stg span{font-family:var(--mono);font-size:15px;color:var(--ink2);line-height:1.5}
+.chip{display:inline-block;font-family:var(--mono);font-size:.82em;background:var(--ps);color:var(--p);padding:2px 9px;border-radius:4px}
+.slide.night .chip{background:rgba(91,218,204,.14)}
+
+/* ============ 11 memory ============ */
+.mem{display:grid;grid-template-columns:repeat(2,270px);grid-template-rows:auto 184px;column-gap:40px;row-gap:18px;margin:22px 0 12px}
+.mem .cap{align-self:start;font-size:17px;line-height:1.5;color:var(--ink2)}
+.mem .cap b{display:block;font-family:var(--math);font-size:22px;line-height:1.3;font-weight:500;color:var(--ink);margin-bottom:6px;white-space:nowrap}
+.blk{align-self:end;width:150px;border-radius:3px}
+.blk.full{height:176px;border:1.5px solid var(--mute);background:repeating-linear-gradient(135deg,#D2D9E3 0 7px,#E4E9F0 7px 14px)}
+.blk.chunk{height:40px;background:var(--p)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:16px;border-top:1px solid var(--rule)}
+.stats>div{padding:14px 28px 0 0}
+.stats>div+div{padding-left:28px;border-left:1px solid var(--rule)}
+.stats .big{font-family:var(--serif);font-weight:800;font-size:56px;line-height:1.1;letter-spacing:-.03em}
+
+/* ============ 12 validation ============ */
+.layer{border-top:3px solid var(--ink)}
+.layer .big{font-family:var(--serif);font-weight:800;font-size:54px;letter-spacing:-.03em;line-height:1.15;margin:14px 0 8px}
+.layer p.body{font-size:18px;line-height:1.6}
+.hold{display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-top:26px}
+.hold>div{padding:14px 0 0;border-top:1px solid var(--rule)}
+.hold>div.next{border-top:1px dashed var(--d)}
+
+/* ============ 13 closing ============ */
+.take h3{font-family:var(--serif);font-weight:800;font-size:30px;margin-bottom:12px}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-top:22px}
+.links a{color:var(--np);text-decoration:none;border-bottom:1px solid rgba(91,218,204,.4)}
+.links a:hover{border-bottom-color:currentColor}
+.thanks{font-family:var(--serif);font-size:40px;font-weight:800;letter-spacing:-.01em}
+
+/* ============ Chrome (outside stage) ============ */
+.ctl{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:30;display:flex;align-items:center;gap:14px;padding:7px 8px 7px 18px;border-radius:12px;background:rgba(10,16,28,.86);backdrop-filter:blur(14px);border:1px solid rgba(150,172,200,.2);color:#E6EDF6;font-size:13px;transition:opacity .3s}
+.ctl .counter{font-family:var(--mono);font-size:13px;min-width:56px;color:#C7D3E2}
+.dots{display:flex;gap:5px;align-items:center}
+.dots button{border:0;padding:0;width:6px;height:6px;border-radius:3px;background:#40536C;cursor:pointer;transition:width .2s,background .2s}
+.dots button.active{width:22px;background:#5BDACC}
+.hint{color:#8196AE;font-size:12px;margin:0 4px 0 6px;white-space:nowrap}
+.nb{width:32px;height:32px;border-radius:8px;border:1px solid #30445D;background:#121E30;color:#E6EDF6;font:600 14px var(--sans);cursor:pointer}
+.nb:hover:not(:disabled){border-color:#5BDACC;color:#5BDACC}
+.nb:disabled{opacity:.3;cursor:default}
+.nb:focus-visible,.dots button:focus-visible{outline:2px solid #5BDACC;outline-offset:2px}
+.prog{position:fixed;left:0;bottom:0;height:3px;width:0;background:#5BDACC;z-index:31;transition:width .25s}
+body.idle .ctl{opacity:0;pointer-events:none}
+body.idle{cursor:none}
+.ctl:focus-within{opacity:1!important;pointer-events:auto!important}
+.notes-panel{display:none;position:fixed;right:24px;bottom:74px;z-index:29;width:min(560px,calc(100vw - 48px));max-height:44vh;overflow:auto;padding:20px 24px;background:rgba(10,16,28,.96);border:1px solid #33475F;border-radius:12px;color:#D3DDEA;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+body.show-notes .notes-panel{display:block}
+.notes-panel h4{margin:0 0 8px;font-size:14px;font-weight:600;color:#5BDACC}
+.notes-panel p{font-size:15px;line-height:1.75}
+@media(hover:none){body.idle .ctl{opacity:1;pointer-events:auto}.hint{display:none}}
+@media(max-width:700px){.hint,.dots{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{
+  @page{size:1600px 900px;margin:0}
+  html,body{overflow:visible;height:auto;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .stage{position:static;transform:none;width:1600px;height:auto}
+  .slide,.slide.active{display:flex!important;position:relative;inset:auto;width:1600px;height:900px;page-break-after:always;break-after:page;animation:none}
+  .ctl,.prog,.notes-panel{display:none!important}
+}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+<!-- 01 封面 -->
+<section class="slide night active" aria-label="封面" data-sec="封面">
+  <div class="run"><span class="sec">AReaL 技术分享</span><span class="pg">01 / 13</span></div>
+  <div class="cover">
+    <div>
+      <p class="kick">训练—推理不一致（Training–Inference Mismatch）</p>
+      <h1 class="ttl">Score<br>Centering</h1>
+      <p class="lead">理解训练—推理不一致如何影响策略梯度，以及如何用加性校正稳定 off-policy RL。</p>
+      <div class="tags"><span>算法原理</span><span>Top-k 近似</span><span>AReaL 工程实现</span></div>
+      <p class="meta">AReaL PR #1797，分享时长 15–18 分钟</p>
+    </div>
+    <svg viewBox="0 0 640 610" role="img" aria-label="同一生成位置，训练侧 p 与 rollout 侧 q 的概率对比，以及两者之差">
+      <g id="coverBars"></g>
+      <line x1="30" y1="330" x2="620" y2="330" stroke="var(--rule)" stroke-width="1.5"/>
+      <line x1="30" y1="476" x2="620" y2="476" stroke="var(--rule)" stroke-width="1.5"/>
+      <text x="30" y="420" font-size="16" fill="var(--mute)">q − p（朝上表示 rollout 给的概率更高）</text>
+      <g font-size="17" fill="var(--ink2)">
+        <rect x="30" y="556" width="14" height="14" fill="var(--p)"/><text x="52" y="568">训练侧 p</text>
+        <rect x="170" y="556" width="14" height="14" fill="var(--q)"/><text x="192" y="568">rollout 侧 q</text>
+        <rect x="340" y="556" width="14" height="14" fill="var(--d)"/><text x="362" y="568">差值 q − p</text>
+      </g>
+      <text x="30" y="600" font-size="15" fill="var(--mute)">示意数据：同一生成位置，两侧给出的概率略有不同</text>
+    </svg>
+  </div>
+  <aside class="notes"><h3>讲者备注 · 开场</h3><p>今天围绕一个明确问题展开：rollout 引擎与训练引擎计算的概率存在差异时，这种差异怎样进入策略梯度，以及 Score Centering 如何估计并扣除由此产生的期望 score 漂移。随后重点讲 top-k/tail 近似和 AReaL 的工程链路。</p></aside>
+</section>
+
+<!-- 02 一次训练迭代 -->
+<section class="slide" aria-label="一次强化学习训练迭代" data-sec="背景">
+  <div class="run"><span class="sec">背景</span><span class="pg">02 / 13</span></div>
+  <h2>一次 RL 训练迭代，发生了什么？</h2>
+  <p class="lead" style="margin-bottom:34px">先生成样本，再评价行为，最后用 reward 更新生成策略。</p>
+  <div class="pipe">
+    <div class="step"><b>1 Prompt</b><span>输入问题、上下文、任务约束</span></div>
+    <div class="step q"><b>2 Rollout</b><span>vLLM 生成回答，行为分布 <span class="m" style="display:inline"><i>q</i></span></span></div>
+    <div class="step"><b>3 Reward</b><span>规则、执行器或奖励模型</span></div>
+    <div class="step"><b>4 Advantage</b><span>衡量回答相对表现</span></div>
+    <div class="step p"><b>5 Update</b><span>FSDP 计算梯度，更新策略 <span class="m" style="display:inline"><i>p</i><sub>θ</sub></span></span></div>
+  </div>
+  <div class="cols c2">
+    <div><div class="label cq">推理阶段 Rollout</div><h3>回答是怎样生成的</h3><p class="body">系统按当前推理引擎实际使用的分布逐 token 采样。重点是生成吞吐、延迟、KV cache 和批处理效率。</p></div>
+    <div><div class="label cp">更新阶段 Training</div><h3>回答是怎样变成梯度的</h3><p class="body">训练引擎重新计算模型概率，用 advantage 构造 loss，再通过反向传播与优化器更新参数。</p></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="pull"><b>问题入口：</b>生成样本来自 rollout 侧分布，梯度却通过训练侧模型计算。两边概率是否一致，会影响优化目标。</div>
+  <aside class="notes"><h3>讲者备注 · 训练流程</h3><p>以 SQL 生成举例：prompt 包含自然语言需求和数据库 schema，模型生成 SQL，执行器返回是否正确的 reward。GRPO 通常会在同一个 prompt 下采样多条回答，再根据组内 reward 形成相对 advantage。注意推理和训练通常由不同系统执行，即使共享权重，概率计算也可能存在偏差。</p></aside>
+</section>
+
+<!-- 03 失配来源 -->
+<section class="slide" aria-label="训练推理不一致的来源" data-sec="失配">
+  <div class="run"><span class="sec">失配</span><span class="pg">03 / 13</span></div>
+  <h2>同一组权重，概率也可能不同</h2>
+  <div class="split" style="grid-template-columns:1fr 1fr">
+    <div>
+      <p class="lead">TIM（Training-Inference Mismatch）是 rollout 行为分布与训练端概率计算之间的不一致。</p>
+      <div class="cols c2" style="margin-top:34px">
+        <div><div class="label cp">数值路径</div><h3>数值路径差异</h3><p class="body" style="font-size:18px">BF16 / FP8、量化、矩阵乘法内核、softmax 实现等，让同一模型得到略有差异的 logits 或 log-prob。</p></div>
+        <div><div class="label cq">策略与采样</div><h3>策略与采样差异</h3><p class="body" style="font-size:18px">权重版本不同、异步 rollout、温度、top-p、top-k 或 logits processor 改变实际行为分布。</p></div>
+      </div>
+      <p class="sm" style="margin-top:28px">实际系统中，这两类因素可能同时存在，应通过固定权重与固定样本分别测量。</p>
+    </div>
+    <div class="panel">
+      <h3 style="margin-bottom:18px">下一个 token 的概率（示意）</h3>
+      <svg viewBox="0 0 640 316" role="img" aria-label="Token A、Token B 在训练侧与 rollout 侧的概率">
+        <g font-size="16" fill="var(--ink2)">
+          <rect x="0" y="2" width="14" height="14" fill="var(--p)"/><text x="22" y="14">训练侧 p</text>
+          <rect x="130" y="2" width="14" height="14" fill="var(--q)"/><text x="152" y="14">rollout 侧 q</text>
+        </g>
+        <line x1="90" y1="40" x2="90" y2="290" stroke="var(--rule)" stroke-width="1.5"/>
+        <g font-size="18" fill="var(--ink)" font-weight="600"><text x="0" y="96">Token A</text><text x="0" y="246">Token B</text></g>
+        <g>
+          <rect class="gx fill-p" style="--i:0" x="90" y="50" width="276" height="32"/><text x="376" y="73" font-size="19" fill="var(--p)" font-weight="600">0.60</text>
+          <rect class="gx fill-q" style="--i:1" x="90" y="90" width="322" height="32"/><text x="422" y="113" font-size="19" fill="var(--qi)" font-weight="600">0.70</text>
+          <text x="640" y="96" text-anchor="end" font-size="18" fill="var(--d)" font-weight="600">q − p = +0.10</text>
+          <rect class="gx fill-p" style="--i:2" x="90" y="200" width="184" height="32"/><text x="284" y="223" font-size="19" fill="var(--p)" font-weight="600">0.40</text>
+          <rect class="gx fill-q" style="--i:3" x="90" y="240" width="138" height="32"/><text x="238" y="263" font-size="19" fill="var(--qi)" font-weight="600">0.30</text>
+          <text x="640" y="246" text-anchor="end" font-size="18" fill="var(--d)" font-weight="600">q − p = −0.10</text>
+        </g>
+      </svg>
+      <p class="sm" style="margin-top:12px">示意数据：训练侧 p=(0.6, 0.4)，rollout 侧 q=(0.7, 0.3)。差异看起来很小，却会改变训练样本的统计分布。</p>
+    </div>
+  </div>
+  <aside class="notes"><h3>讲者备注 · 两类 mismatch</h3><p>讨论问题时需要把数值路径差异和真实策略差异分开。相同权重时固定同一批 token 重算两侧 logprob，测量的主要是数值路径差异；让 rollout 使用旧版本权重则会叠加 policy staleness。采样规则也是实际行为分布的一部分，不能把原始模型 softmax 自动当成真实采样概率。</p></aside>
+</section>
+
+<!-- 04 策略梯度基础 -->
+<section class="slide" aria-label="PPO和策略梯度基础" data-sec="策略梯度">
+  <div class="run"><span class="sec">策略梯度基础</span><span class="pg">04 / 13</span></div>
+  <h2>Reward 怎样影响模型参数？</h2>
+  <div class="cols c3" style="margin-top:6px">
+    <div><div class="label cp">Log-probability</div><div class="eq bigm"><span class="m">log <i>p</i><sub>θ</sub>(<i>y</i> | <i>s</i>)</span></div><p class="body" style="font-size:18px">给定前缀 s，模型生成 token y 的概率取对数。整段回答的 log-prob 是每个 token 条件 log-prob 的求和。</p></div>
+    <div><div class="label">Advantage</div><div class="eq bigm"><span class="m"><i>A</i> &gt; 0　<i>A</i> &lt; 0</span></div><p class="body" style="font-size:18px">正 advantage 推动提高该行为的概率；负 advantage 推动降低它。GRPO 常从同一 prompt 下多条回答的相对 reward 得到 advantage。</p></div>
+    <div><div class="label cq">Importance ratio</div><div class="eq bigm" style="font-size:36px"><span class="m"><i>r</i> = <span class="fr"><span><i>p</i><sub>θ</sub>(<i>y</i>|<i>s</i>)</span><span><i>q</i>(<i>y</i>|<i>s</i>)</span></span></span></div><p class="body" style="font-size:18px">衡量当前训练策略给该 token 的概率，相对 rollout 行为分布发生了多大变化。</p></div>
+  </div>
+  <div class="eqband">
+    <div class="eq"><span class="m">ℓ = −<i>A</i> · log <i>p</i><sub>θ</sub>(<i>y</i> | <i>s</i>)</span></div>
+    <p class="body">最基本的策略梯度目标。PPO 在其基础上使用 ratio 和 clipping，限制单次策略更新幅度。</p>
+  </div>
+  <div class="spacer"></div>
+  <div class="note q"><b>AReaL 配置提示：</b><code>use_same_logprob</code> 会改变 PPO loss 中旧策略 log-prob 的来源；它不能保证训练侧的梯度计算路径与 rollout 侧完全一致。</div>
+  <aside class="notes"><h3>讲者备注 · 三个概念</h3><p>如果某条回答表现好，advantage 为正，优化器会推动相关 token 的 logprob 上升；反之则降低。PPO ratio 比较训练端当前概率和样本生成时的旧策略概率，clipping 用来限制一次更新过大。复用 rollout 的 old_logprob 可以确保 PPO 分母使用 rollout 记录值，但训练侧梯度仍由 trainer 模型计算，二者的数值路径差异依然可能存在。</p></aside>
+</section>
+
+<!-- 05 期望 score 为零 -->
+<section class="slide" aria-label="期望score为什么为零" data-sec="漂移来源">
+  <div class="run"><span class="sec">漂移从哪里来</span><span class="pg">05 / 13</span></div>
+  <h2>关键恒等式：on-policy 时，期望 score 为零</h2>
+  <div class="split" style="grid-template-columns:.85fr 1.15fr">
+    <div>
+      <p class="lead" style="font-size:23px">Score function 衡量参数微小变化时，某个 token 的 log-probability 会如何变化。</p>
+      <div class="eq" style="margin:24px 0;font-size:40px"><span class="m"><i>s</i><sub>θ</sub>(<i>a</i> | <i>s</i>) = ∇<sub>θ</sub> log <i>p</i><sub>θ</sub>(<i>a</i> | <i>s</i>)</span></div>
+      <p class="body" style="font-size:19px">当 token 确实从同一个训练策略 p<sub>θ</sub> 中采样时，对所有 token 的 score 按各自概率求平均，结果必然为零。</p>
+    </div>
+    <div class="panel">
+      <div class="label">推导</div>
+      <div class="der">
+        <div class="eq"><span class="m"><span class="E">E</span><sub><i>p</i></sub>[<i>s</i><sub>θ</sub>] = Σ<sub><i>a</i></sub> <i>p</i><sub>θ</sub>(<i>a</i>) ∇<sub>θ</sub> log <i>p</i><sub>θ</sub>(<i>a</i>)</span></div><div class="why">定义</div>
+        <div class="eq"><span class="m">&nbsp;&nbsp;&nbsp;&nbsp;= Σ<sub><i>a</i></sub> ∇<sub>θ</sub> <i>p</i><sub>θ</sub>(<i>a</i>)</span></div><div class="why">∇log p = ∇p / p</div>
+        <div class="eq"><span class="m">&nbsp;&nbsp;&nbsp;&nbsp;= ∇<sub>θ</sub> Σ<sub><i>a</i></sub> <i>p</i><sub>θ</sub>(<i>a</i>) = ∇<sub>θ</sub> 1 = 0</span></div><div class="why">Σ p = 1</div>
+      </div>
+      <p class="sm" style="margin-top:18px">最后一步来自概率归一化：所有可能 token 的概率总和恒等于 1，对参数求导后结果为 0。</p>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="state" style="margin-top:0">
+    <div><h3 class="cp">样本来自 p<sub style="font-size:.7em">θ</sub></h3><div class="eq"><span class="m"><span class="E">E</span><sub><i>p</i></sub>[<i>s</i><sub>θ</sub>] = 0</span></div><p class="sm">策略与采样分布一致，没有这类平均 score 漂移。</p></div>
+    <div class="bad"><h3 class="cd">样本来自 q，且 q 与 p<sub style="font-size:.7em">θ</sub> 不同</h3><div class="eq"><span class="m"><span class="E">E</span><sub><i>q</i></sub>[<i>s</i><sub>θ</sub>] ≠ 0</span></div><p class="sm">可能出现系统性 drift。</p></div>
+  </div>
+  <aside class="notes"><h3>讲者备注 · 推导直觉</h3><p>这个恒等式是全场最关键的数学起点。p(a) 乘上 log p(a) 的梯度，可以改写成 p(a) 的梯度；所有 token 加起来，就是对概率总和求导。因为总和等于 1，所以结果为零。换成 q 分布对 p 的 score 加权时，就不再有这个保证。</p></aside>
+</section>
+
+<!-- 06 梯度漂移分解 -->
+<section class="slide" aria-label="梯度漂移分解" data-sec="梯度分解">
+  <div class="run"><span class="sec">梯度分解</span><span class="pg">06 / 13</span></div>
+  <h2>分布不一致会给梯度增加一个偏移项</h2>
+  <div class="decomp">
+    <div class="eq"><span class="m"><span class="E">E</span><sub><i>q</i></sub>[<i>A s</i><sub>θ</sub>]</span></div>
+    <div class="eq">=</div>
+    <div class="eq cp"><span class="m">Cov<sub><i>q</i></sub>(<i>A</i>, <i>s</i><sub>θ</sub>)</span></div>
+    <div class="eq">+</div>
+    <div class="eq cd"><span class="m"><span class="E">E</span><sub><i>q</i></sub>[<i>A</i>] · <span class="E">E</span><sub><i>q</i></sub>[<i>s</i><sub>θ</sub>]</span></div>
+    <div></div><div></div>
+    <div><div class="u" style="background:var(--p)"></div><div class="t cp" style="margin-top:8px">有效学习信号</div></div>
+    <div></div>
+    <div><div class="u" style="background:var(--d)"></div><div class="t cd" style="margin-top:8px">TIM 漂移</div></div>
+  </div>
+  <div class="split" style="grid-template-columns:1.02fr .98fr;gap:56px">
+    <div class="panel" style="padding:20px 24px">
+      <svg viewBox="0 0 620 300" role="img" aria-label="有效梯度与漂移叠加形成实际更新方向">
+        <defs>
+          <marker id="aP" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 Z" style="fill:var(--p)"/></marker>
+          <marker id="aD" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 Z" style="fill:var(--d)"/></marker>
+          <marker id="aI" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 Z" style="fill:var(--ink)"/></marker>
+        </defs>
+        <circle cx="60" cy="238" r="5" style="fill:var(--ink)"/>
+        <line x1="60" y1="238" x2="350" y2="124" stroke="var(--p)" stroke-width="5" marker-end="url(#aP)"/>
+        <line x1="350" y1="124" x2="520" y2="190" stroke="var(--d)" stroke-width="5" marker-end="url(#aD)"/>
+        <line x1="60" y1="238" x2="518" y2="190" stroke="var(--ink)" stroke-width="2.5" stroke-dasharray="8 7" marker-end="url(#aI)"/>
+        <text x="170" y="150" font-size="19" font-weight="600" fill="var(--p)">有效学习信号</text>
+        <text x="420" y="136" font-size="19" font-weight="600" fill="var(--d)">TIM 漂移</text>
+        <text x="236" y="244" font-size="19" font-weight="600" fill="var(--ink)">实际更新方向</text>
+        <text x="60" y="278" font-size="15" fill="var(--mute)">示意：漂移长期存在时，参数更新可能无法有效转化为 reward 改善</text>
+      </svg>
+    </div>
+    <div>
+      <div class="note" style="margin-bottom:22px"><b class="cp">Covariance 是有效信号。</b>它反映 advantage 与 score 的关联：表现更好的行为，是否对应应当增加的 token 概率。</div>
+      <div class="note d"><b class="cd">期望漂移是偏移项。</b>由 advantage 均值与 rollout 分布下的平均 score 相乘而成。它可能推动参数更新，却不代表 reward 与行为之间的有效关联。</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <p class="sm">TIM 是 reward collapse 的一种候选机制。奖励稀疏、全零 advantage、异步策略陈旧性与蒸馏 loss 也可能参与其中。</p>
+  <aside class="notes"><h3>讲者备注 · 公式拆开讲</h3><p>把策略梯度写成协方差和均值乘积，就能将学习信号与漂移分开。前一项表示 advantage 与 score 是否相关；后一项来自期望 score 不为零。如果样本分布不匹配，后一项即使与 reward 区分无关也可能存在。它能解释一些训练不稳定现象，但单独观察 reward 坍塌还不能证明一定是它造成的。</p></aside>
+</section>
+
+<!-- 07 Score Centering -->
+<section class="slide" aria-label="Score Centering原理" data-sec="Score Centering">
+  <div class="run"><span class="sec">Score Centering</span><span class="pg">07 / 13</span></div>
+  <h2>SC：估计平均 score，再从目标中扣除</h2>
+  <div class="eqband" style="margin-top:0;grid-template-columns:1fr;padding:22px 0">
+    <div class="eq" style="font-size:46px"><span class="m"><i>s&#771;</i><sub>θ</sub>(<i>a</i> | <i>s</i>) = <i>s</i><sub>θ</sub>(<i>a</i> | <i>s</i>) − <span class="E">E</span><sub><i>a′</i>~<i>q</i></sub>[<i>s</i><sub>θ</sub>(<i>a′</i> | <i>s</i>)]</span></div>
+  </div>
+  <div class="split" style="grid-template-columns:1fr 1fr;margin-top:34px;gap:64px">
+    <div style="display:grid;gap:22px">
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:16px"><div class="mono cp" style="font-size:26px;font-weight:500">1</div><div><h3>计算训练 score</h3><p class="body" style="font-size:18px">对当前生成位置的候选 token，计算 trainer 的 log-probability 及其梯度。</p></div></div>
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:16px"><div class="mono cq" style="font-size:26px;font-weight:500">2</div><div><h3>估计期望 score</h3><p class="body" style="font-size:18px">使用 rollout 侧概率给不同 token 加权，估计采样分布下的平均 score。</p></div></div>
+      <div style="display:grid;grid-template-columns:44px 1fr;gap:16px"><div class="mono cd" style="font-size:26px;font-weight:500">3</div><div><h3>减去漂移项</h3><p class="body" style="font-size:18px">在策略目标中加入 correction，让其梯度抵消期望 score 的偏移。</p></div></div>
+    </div>
+    <div>
+      <div class="label">理想化结果</div>
+      <div class="eq" style="font-size:42px"><span class="m"><i>g</i><sub>SC</sub> = <span class="E">E</span><sub><i>q</i></sub>[<i>A</i> · <i>s&#771;</i><sub>θ</sub>] = <span class="cp">Cov<sub><i>q</i></sub>(<i>A</i>, <i>s</i><sub>θ</sub>)</span></span></div>
+      <p class="body" style="font-size:18px;margin:14px 0 26px">扣除 E<sub>q</sub>[A] · E<sub>q</sub>[s<sub>θ</sub>] 这部分漂移，保留 advantage 与 score 的协方差项。</p>
+      <div class="note"><b>正确性检查：</b>当 p=q 时，期望 score 为零，SC 应退化为原始策略梯度，校正项及其梯度应为零。</div>
+    </div>
+  </div>
+  <aside class="notes"><h3>讲者备注 · 为什么叫 centering</h3><p>它可以类比统计中的中心化：先找出整体平均偏移，再从每条观测中减去。这里处理的是向量形式的 score，而不是普通的一维数据。用 loss 实现时，需要让 correction 项的梯度抵消期望 score，并保持它与 advantage 和所用重要性权重之间的关系。</p></aside>
+</section>
+
+<!-- 08 Top-k + tail -->
+<section class="slide" aria-label="Top-k和tail近似" data-sec="Top-k 近似">
+  <div class="run"><span class="sec">Top-k 与 tail 近似</span><span class="pg">08 / 13</span></div>
+  <h2>用 top-k 头部估计整张词表</h2>
+  <div class="split" style="grid-template-columns:1.08fr .92fr;gap:56px">
+    <div>
+      <p class="lead" style="font-size:22px;margin-bottom:18px">全词表可能有数万 token。传递所有 token 的概率很贵，SC 只传概率最高的 k 个候选，再估计 tail 的总质量。</p>
+      <div class="panel" style="padding:20px 22px 16px">
+        <svg viewBox="0 0 700 330" role="img" aria-label="按概率排序的词表，头部为 top-k，其余为 tail">
+          <text x="0" y="18" font-size="16" fill="var(--mute)">某个生成位置的词表（示意，按概率排序）</text>
+          <g id="vocabBars"></g>
+          <line x1="14" y1="236" x2="690" y2="236" stroke="var(--rule)" stroke-width="1.5"/>
+          <path d="M16 252 v8 h176 v-8" fill="none" stroke="var(--p)" stroke-width="2.5"/>
+          <path d="M200 252 v8 h488 v-8" fill="none" stroke="var(--mute)" stroke-width="2.5"/>
+          <text x="104" y="284" text-anchor="middle" font-size="17" font-weight="600" fill="var(--p)">top-k 头部 H</text>
+          <text x="104" y="306" text-anchor="middle" font-size="15" fill="var(--ink2)">保存 token ID + log-prob</text>
+          <text x="444" y="284" text-anchor="middle" font-size="17" font-weight="600" fill="var(--ink2)">tail</text>
+          <text x="444" y="306" text-anchor="middle" font-size="15" fill="var(--ink2)">不逐 token 传输，只估计总质量</text>
+        </svg>
+      </div>
+      <p class="sm" style="margin-top:10px">k = 128（本次实现默认值）</p>
+    </div>
+    <div class="steps">
+      <div>
+        <div class="label cp">第一步：先算两侧头部质量</div>
+        <div class="eq"><span class="m"><i>q</i><sub>H</sub> = Σ<sub><i>v</i>∈H</sub> <i>q</i><sub><i>v</i></sub>　<i>p</i><sub>H</sub> = Σ<sub><i>v</i>∈H</sub> <i>p</i><sub><i>v</i></sub></span></div>
+        <p class="body" style="font-size:18px">得到 tail 的剩余质量：q<sub>tail</sub> = 1 − q<sub>H</sub>，p<sub>tail</sub> = 1 − p<sub>H</sub>。</p>
+      </div>
+      <div>
+        <div class="label cq">第二步：用比例系数匹配 tail 总量</div>
+        <div class="eq"><span class="m"><i>ρ</i> = <span class="fr"><span>1 − <i>q</i><sub>H</sub></span><span>1 − <i>p</i><sub>H</sub></span></span></span></div>
+        <p class="body" style="font-size:18px">近似令 tail 内部 q<sub>v</sub> ≈ ρ p<sub>v</sub>，用一个比例调整 tail 的总质量。</p>
+      </div>
+      <div>
+        <div class="note q">例：q<sub>H</sub>=0.92、p<sub>H</sub>=0.90，则 tail 分别剩余 0.08 和 0.10，<b>ρ≈0.8</b>。</div>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><h3>讲者备注 · 为什么是 top-k</h3><p>头部候选往往覆盖了大部分概率质量，但仍保留一定的 tail。两个分布对相同 top-k 集合的概率质量可以直接计算；tail 的总量由归一化性质得到。近似假设 tail 形状与 trainer 分布相似，整体按 rho 缩放。它不是逐个恢复所有 tail token 的真实概率，而是用低成本近似期望 score。</p></aside>
+</section>
+
+<!-- 09 Correction -->
+<section class="slide" aria-label="Correction与TIS MIS" data-sec="校正项">
+  <div class="run"><span class="sec">校正项</span><span class="pg">09 / 13</span></div>
+  <h2>把头部的概率残差变成加性校正</h2>
+  <div class="split" style="grid-template-columns:1fr 1fr;gap:64px">
+    <div>
+      <div class="label cp">纯 Score Centering</div>
+      <div class="eq" style="font-size:40px;margin-bottom:18px"><span class="m"><i>C</i>(<i>s</i>) = Σ<sub><i>v</i>∈H</sub> sg(<i>q</i><sub><i>v</i></sub> − <i>ρ p</i><sub><i>v</i></sub>) · log <i>p</i><sub><i>v</i></sub></span></div>
+      <p class="body" style="font-size:19px">每个头部 token 都有一个残差：rollout 给它的概率，与按 tail 比例缩放后的 trainer 概率之差。残差作为固定系数，乘上训练侧 log-probability，形成 correction。</p>
+      <div class="note" style="margin-top:24px"><b>stop-gradient（sg）：</b>校正系数在反向传播时固定，梯度仅通过 trainer 的 log-probability 传递。</div>
+    </div>
+    <div>
+      <div class="label cq">加权变体：和 TIS / MIS 的组合</div>
+      <div class="eq" style="font-size:36px"><span class="m"><i>r</i><sub><i>v</i></sub> = <i>p</i><sub><i>v</i></sub> / <i>q</i><sub><i>v</i></sub></span></div>
+      <div class="two-var">
+        <div><b class="cp">TIS 上界截断</b><span class="m" style="font-size:22px"><i>f</i>(<i>r</i>) = min(<i>r</i>, upper)</span></div>
+        <div><b class="cd">MIS 区间屏蔽</b><span style="font-size:18px;color:var(--ink2)">仅保留 <span class="m">low ≤ <i>r</i> ≤ high</span></span></div>
+      </div>
+      <div class="eq" style="font-size:32px;line-height:1.6"><span class="m"><i>w</i><sub><i>v</i></sub> = <i>f</i>(<i>p</i><sub><i>v</i></sub> / <i>q</i><sub><i>v</i></sub>)</span><br><span class="m"><i>α</i> = <i>ρ</i> · <i>f</i>(1/<i>ρ</i>)</span><br><span class="m"><i>C</i>(<i>s</i>) = Σ<sub>H</sub> sg(<i>q</i><sub><i>v</i></sub><i>w</i><sub><i>v</i></sub> − <i>α p</i><sub><i>v</i></sub>) log <i>p</i><sub><i>v</i></sub></span></div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <p class="sm">完整策略目标还包含实际采样 token 的加权策略项；correction 与 advantage 一起进入目标，并按 loss mask 和有效 token 数进行归一化。</p>
+  <aside class="notes"><h3>讲者备注 · 如何理解残差</h3><p>在纯 SC 模式下，头部权重为 1，tail 比例由 rho 决定，因此残差为 qv-rho pv。需要截断或屏蔽重要性权重时，使用 f(r) 构造头部与 tail 权重。策略项与 correction 需要使用一致的目标定义；实际配置的上下界会决定 TIS/MIS 的有效行为。</p></aside>
+</section>
+
+<!-- 10 AReaL 链路 -->
+<section class="slide" aria-label="AReaL工程链路" data-sec="工程链路">
+  <div class="run"><span class="sec">AReaL 接入</span><span class="pg">10 / 13</span></div>
+  <h2>工程核心：让 rollout 概率一路到达 actor loss</h2>
+  <p class="lead" style="font-size:23px;max-width:1100px">每个生成位置需要两套信息：rollout 的 top-k 概率，以及 trainer 对同一组 token 的 log-probability。</p>
+  <div class="sys">
+    <div class="grp q">Rollout 侧</div><div class="grp p">Trainer 侧</div>
+    <div class="stg"><span class="n">1</span><b>vLLM Request</b><span>logprobs = sc_top_k</span></div>
+    <div class="stg"><span class="n">2</span><b>Parse</b><span>top-k token IDs / logps</span></div>
+    <div class="stg"><span class="n">3</span><b>Trajectory</b><span>分段累积、按序列对齐</span></div>
+    <div class="stg"><span class="n">4</span><b>Micro-batch</b><span>padding / split / pack</span></div>
+    <div class="stg"><span class="n">5</span><b>Actor Loss</b><span>trainer logits → correction</span></div>
+  </div>
+  <div class="cols c3">
+    <div><div class="label">配置</div><h3>参数贯穿采样和训练</h3><p class="body" style="font-size:18px"><code>use_score_centering</code> 控制开关；<code>sc_top_k</code> 控制候选数量；mode 和 clip 参数控制权重规则。</p></div>
+    <div><div class="label">数据对齐</div><h3>保证 token 对齐</h3><p class="body" style="font-size:18px">top-k 数据必须与序列位置、loss mask、trainer logits 保持同一 token 语义；缺失概率以 −∞ 填充，使概率质量为零。</p></div>
+    <div><div class="label">Loss 注入</div><h3>只传需要的信息</h3><p class="body" style="font-size:18px">rollout 传输 top-k IDs 和 logps；训练端用自身 logits 计算这些 IDs 的概率，再构造 correction。</p></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="note"><b>数据张量：</b><span class="chip">sampler_topk_token_ids</span> 与 <span class="chip">sampler_topk_logps</span> 的典型形状是 <span class="chip">[batch, seq, k]</span>。</div>
+  <aside class="notes"><h3>讲者备注 · 代码改动位置</h3><p>从配置层一路追踪到 vLLM request；响应解析层新增 top-k ID 与 logp 字段；remote inference 聚合被中断或分段的生成结果；workflow 将结果装配进 trajectory；data utilities 保证 padding 与 micro-batch splitting 的维度一致；FSDP engine 在启用 SC 时注入 logits；actor 计算 trainer head logp 并构造校正项。这个数据流是本次接入工作的主体。</p></aside>
+</section>
+
+<!-- 11 分块 autograd -->
+<section class="slide" aria-label="分块autograd和显存优化" data-sec="显存">
+  <div class="run"><span class="sec">显存优化</span><span class="pg">11 / 13</span></div>
+  <h2>分块 autograd：不物化完整的 FP32 softmax</h2>
+  <div class="split" style="grid-template-columns:1fr 1fr;gap:64px">
+    <div>
+      <p class="lead" style="font-size:22px">训练侧已经有完整 logits。计算 SC 只需要 top-k 对应的 log-probability；保存完整的 log-softmax 中间张量会额外消耗显存。</p>
+      <div class="mem">
+        <div class="cap"><b>[N, vocab]</b>log_softmax → gather。额外中间工作区随 N 和词表大小共同增长。</div>
+        <div class="cap"><b>[chunk, vocab] × blocks</b>分块计算归一化项，只输出需要的候选 token log-prob。</div>
+        <div class="blk full"></div>
+        <div class="blk chunk"></div>
+      </div>
+      <p class="sm">示意比例，非实测显存。</p>
+    </div>
+    <div>
+      <div class="panel" style="padding:20px 24px">
+        <svg viewBox="0 0 520 340" role="img" aria-label="分块前向计算与反向重算流程">
+          <text x="0" y="18" font-size="16" font-weight="600" fill="var(--mute)">前向</text>
+          <rect x="0" y="30" width="520" height="56" rx="5" fill="none" stroke="var(--ink)" stroke-width="1.8"/>
+          <text x="260" y="55" text-anchor="middle" font-size="18" font-weight="600" fill="var(--ink)">原始 logits [N, V]</text>
+          <text x="260" y="75" text-anchor="middle" font-size="14" fill="var(--mute)">分成多个 chunk，每次处理 4096 个位置</text>
+          <path d="M260 90 v22" stroke="var(--mute)" stroke-width="2"/><path d="M254 108 l6 8 l6 -8" fill="none" stroke="var(--mute)" stroke-width="2"/>
+          <g>
+            <rect x="0" y="122" width="164" height="60" rx="5" style="fill:var(--p)"/><text x="82" y="148" text-anchor="middle" font-size="16" font-weight="600" fill="#fff">Chunk 1</text><text x="82" y="168" text-anchor="middle" font-size="13" fill="#fff" opacity=".85">log-sum-exp</text>
+            <rect x="178" y="122" width="164" height="60" rx="5" style="fill:var(--p)"/><text x="260" y="148" text-anchor="middle" font-size="16" font-weight="600" fill="#fff">Chunk 2</text><text x="260" y="168" text-anchor="middle" font-size="13" fill="#fff" opacity=".85">log-sum-exp</text>
+            <rect x="356" y="122" width="164" height="60" rx="5" fill="none" stroke="var(--p)" stroke-width="2" stroke-dasharray="6 5"/><text x="438" y="148" text-anchor="middle" font-size="16" font-weight="600" fill="var(--p)">…</text><text x="438" y="168" text-anchor="middle" font-size="13" fill="var(--p)">重复处理</text>
+          </g>
+          <path d="M260 186 v22" stroke="var(--mute)" stroke-width="2"/><path d="M254 204 l6 8 l6 -8" fill="none" stroke="var(--mute)" stroke-width="2"/>
+          <rect x="0" y="216" width="520" height="44" rx="5" style="fill:var(--ps)"/><text x="260" y="244" text-anchor="middle" font-size="17" font-weight="600" fill="var(--p)">只输出 top-k token 的 log-probability</text>
+          <line x1="0" y1="282" x2="520" y2="282" stroke="var(--rule)"/>
+          <text x="0" y="308" font-size="16" font-weight="600" fill="var(--mute)">反向</text>
+          <text x="52" y="308" font-size="16" fill="var(--ink2)">按 chunk 重算 softmax，解析计算梯度</text>
+        </svg>
+      </div>
+      <div class="stats">
+        <div><div class="big">4096</div><p class="sm">默认 chunk size</p></div>
+        <div><div class="big">FP32</div><p class="sm">低精度输入的归一化计算</p></div>
+      </div>
+    </div>
+  </div>
+  <aside class="notes"><h3>讲者备注 · 显存管理</h3><p>自定义 autograd 函数将 logits reshape 为 [N,V]，每次只处理有限数量的位置。前向保存 logits、token IDs、每行最大值与归一化分母；反向重新计算当前 chunk 的 softmax，再计算 log-softmax 的梯度。额外 FP32 工作区从 [N,V] 降到 [chunk_size,V]。目前 Ulysses SP 因本地 logits 与 all-gather 后的 loss 数据长度不一致而被显式限制；多轮 concat 也有相应约束。</p></aside>
+</section>
+
+<!-- 12 验证 -->
+<section class="slide" aria-label="测试与验证" data-sec="验证">
+  <div class="run"><span class="sec">验证</span><span class="pg">12 / 13</span></div>
+  <h2>三层验证：从数值到链路到端到端</h2>
+  <div class="cols c3" style="gap:0">
+    <div class="layer" style="padding-top:14px"><div class="label">第一层　数值单测</div><h3>correction 计算的正确性</h3><div class="big cp">60 tests</div><p class="body">on-policy 时 correction 恰好为零；trainer top-k log-prob 与全词表 log-softmax 逐元素一致；TIS/MIS 权重函数边界正确；−∞ padding 不贡献概率质量。</p></div>
+    <div class="layer" style="padding-top:14px"><div class="label">第二层　数据链路</div><h3>top-k 一路到达 loss</h3><div class="big">Dataflow</div><p class="body">请求携带 sc_top_k；响应正确解析 token IDs 和 logps；变长轨迹 padding 后维度 [batch, seq, k] 不串位；micro-batch split 不丢失 top-k 维度。</p></div>
+    <div class="layer" style="padding-top:14px"><div class="label">第三层　端到端</div><h3>真实 NPU 训练跑通</h3><div class="big cq">2 steps</div><p class="body">Ascend 910 × 3 卡，sc_top_k=128，2 步 GRPO；correction / q_mass / s_bar 指标正常上报；sc_q_mass ≈ 1.0 确认 top-k 归一化正确。</p></div>
+  </div>
+  <div class="hold">
+    <div><div class="label">单测覆盖范围</div><p class="body" style="font-size:18px">分块 autograd 的前向/反向一致性；fp32/bf16/fp64 dtype 路径；mask 与 padding 交互；温度缩放；Ulysses SP 限制检查。</p></div>
+    <div class="next"><div class="label cd">后续优化方向</div><p class="body" style="font-size:18px">correction 注入 advantage 调制、top-k 位移对齐、pad 槽位 mask。单测对这三类 loss 注入与对齐问题结构性不可见，需端到端长程对照验证。</p></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="note d"><b>边界：</b>2 步 smoke test 只能证明链路可运行，不能证明 SC 已经改善长期训练稳定性。</div>
+  <aside class="notes"><h3>讲者备注 · 验证体系</h3><p>这一页要区分“实现正确性”和“训练收益”。数值单测检查公式与边界条件，数据链路测试检查 top-k 信息能否传到 loss，端到端 smoke test 则确认短程训练能够跑通。当前在 Ascend 910、3 卡环境下以 sc_top_k=128、sc_mode=none 跑通了两步 GRPO；这只能证明链路可运行，不能证明 SC 已经改善长期稳定性。下一步需要在真实 TIM 配置下做长程对照，并检查 correction 与 advantage 的结合、top-k 位置对齐和 padding mask。</p></aside>
+</section>
+
+<!-- 13 总结 -->
+<section class="slide night" aria-label="总结" data-sec="总结">
+  <div class="run"><span class="sec">总结</span><span class="pg">13 / 13</span></div>
+  <h2 style="max-width:1200px">用概率质量近似，校正训练端的平均 score 漂移</h2>
+  <div class="cols c3 take" style="margin-top:10px">
+    <div><div class="label cq">问题机制</div><h3>期望 score 不再为零</h3><p class="body" style="font-size:18px">样本来自 rollout 分布 q，梯度通过 trainer 策略 p<sub>θ</sub> 计算，期望 score 可能不再为零。</p></div>
+    <div><div class="label cp">算法方法</div><h3>扣除漂移，近似 tail</h3><p class="body" style="font-size:18px">Score Centering 估计并扣除期望 score 漂移；top-k 头部加 tail 质量近似减少词表开销。</p></div>
+    <div><div class="label cd">工程落地</div><h3>概率一路到达 loss</h3><p class="body" style="font-size:18px">AReaL 打通 vLLM top-k、trajectory、micro-batch、FSDP logits 与 SC correction，使用分块 autograd 控制显存。</p></div>
+  </div>
+  <div class="note d" style="margin-top:34px"><b>下一步：</b>correction 注入 advantage 调制、top-k 位移对齐、pad 槽位 mask。修复后需在存在真实 TIM 的配置下做长程对照实验，评估 SC 对训练稳定性的实际收益。</div>
+  <div class="links">
+    <div><div class="label">论文</div><p class="body" style="font-size:18px"><a href="https://arxiv.org/abs/2609.20807" target="_blank" rel="noreferrer">Score Centering Stabilizes Off-policy Reinforcement Learning</a></p></div>
+    <div><div class="label">实现</div><p class="body" style="font-size:18px"><a href="https://github.com/areal-project/AReaL/pull/1797" target="_blank" rel="noreferrer">AReaL PR #1797</a>　<a href="https://github.com/martin-marek/score-centering" target="_blank" rel="noreferrer">Reference implementation</a></p></div>
+  </div>
+  <div class="spacer"></div>
+  <p class="thanks">谢谢。Questions &amp; discussion.</p>
+  <aside class="notes"><h3>讲者备注 · 收尾</h3><p>总结三个要点：TIM 会让训练侧 score 在 rollout 分布下产生期望偏移；SC 对这个漂移进行加性校正，top-k + tail 近似控制了成本；工程实现需要保证概率数据从采样端到 loss 端的语义与位置都一致。后续优化方向：correction 注入 advantage 调制、top-k 位移对齐、pad 槽位 mask，修复后需在存在真实 TIM 的配置下做长程对照实验，才能评估 SC 对训练稳定性的实际收益。</p></aside>
+</section>
+
+</div>
+
+<div class="notes-panel" id="notesPanel"><h4 id="notesTitle">讲者备注</h4><p id="notesText"></p></div>
+<div class="ctl" id="ctl">
+  <span class="counter" id="counter">01 / 13</span>
+  <div class="dots" id="dots"></div>
+  <span class="hint">← → 翻页　N 备注　F 全屏</span>
+  <button class="nb" id="prev" aria-label="上一页">←</button>
+  <button class="nb" id="next" aria-label="下一页">→</button>
+  <button class="nb" id="noteBtn" aria-label="讲者备注" title="讲者备注 (N)">N</button>
+  <button class="nb" id="fullBtn" aria-label="全屏" title="全屏 (F)">⛶</button>
+</div>
+<div class="prog" id="prog"></div>
+
+<script>
+(function(){
+  var NS='http://www.w3.org/2000/svg';
+  function el(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);parent.appendChild(e);return e}
+
+  /* 封面：p / q 成对柱 + 差值条 */
+  (function(){
+    var g=document.getElementById('coverBars'); if(!g) return;
+    var p=[.36,.24,.15,.10,.07,.04,.02,.02], q=[.44,.20,.17,.08,.06,.03,.01,.01], S=700, base=330, mid=476;
+    p.forEach(function(pv,i){
+      var x=40+i*72, qv=q[i], d=qv-pv, h=Math.abs(d)*S;
+      el('rect',{class:'gy fill-p',style:'--i:'+i,x:x,y:base-pv*S,width:26,height:pv*S},g);
+      el('rect',{class:'gy fill-q',style:'--i:'+i,x:x+30,y:base-qv*S,width:26,height:qv*S},g);
+      var t=el('text',{x:x+28,y:base+22,'text-anchor':'middle','font-size':15,fill:'var(--mute)'},g); t.textContent='v'+(i+1);
+      if(d>=0) el('rect',{class:'gy fill-d',style:'--i:'+(i+3),x:x+14,y:mid-h,width:28,height:h},g);
+      else el('rect',{class:'gyt fill-d',style:'--i:'+(i+3),x:x+14,y:mid,width:28,height:h},g);
+    });
+  })();
+
+  /* Top-k 页：排序后的词表，头部与 tail */
+  (function(){
+    var g=document.getElementById('vocabBars'); if(!g) return;
+    var n=48, K=14, base=236, max=190;
+    for(var i=0;i<n;i++){
+      var v=0.2*Math.pow(0.86,i)+0.004, h=v/0.204*max, x=16+i*14;
+      el('rect',{class:'gy '+(i<K?'fill-p':''),style:'--i:'+(i*0.4)+';'+(i<K?'':'fill:var(--mute);opacity:.55'),x:x,y:base-h,width:10,height:h},g);
+    }
+  })();
+
+  /* 画布缩放 */
+  var stage=document.getElementById('stage');
+  function fit(){stage.style.setProperty('--s',Math.min(innerWidth/1600,innerHeight/900))}
+  addEventListener('resize',fit); fit();
+
+  /* 导航 */
+  var slides=[].slice.call(document.querySelectorAll('.slide')), idx=0;
+  var dots=document.getElementById('dots'), counter=document.getElementById('counter'), prog=document.getElementById('prog');
+  var prev=document.getElementById('prev'), next=document.getElementById('next');
+  var nTitle=document.getElementById('notesTitle'), nText=document.getElementById('notesText');
+  slides.forEach(function(s,i){var b=document.createElement('button');b.setAttribute('aria-label','跳转到第 '+(i+1)+' 页');b.title='第 '+(i+1)+' 页';b.addEventListener('click',function(){show(i)});dots.appendChild(b)});
+  var db=[].slice.call(dots.children);
+  function pad(n){return String(n).padStart(2,'0')}
+  function show(n){
+    idx=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach(function(s,i){s.classList.toggle('active',i===idx)});
+    db.forEach(function(b,i){b.classList.toggle('active',i===idx)});
+    counter.textContent=pad(idx+1)+' / '+pad(slides.length);
+    prog.style.width=((idx+1)/slides.length*100)+'%';
+    prev.disabled=idx===0; next.disabled=idx===slides.length-1;
+    var a=slides[idx].querySelector('aside');
+    nTitle.textContent=a?a.querySelector('h3').textContent:'讲者备注';
+    nText.textContent=a?a.querySelector('p').textContent:'';
+    try{history.replaceState(null,'','#slide-'+(idx+1))}catch(e){}
+  }
+  function toggleNotes(){document.body.classList.toggle('show-notes')}
+  function fullscreen(){if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}else{document.exitFullscreen&&document.exitFullscreen()}}
+  prev.addEventListener('click',function(){show(idx-1)});
+  next.addEventListener('click',function(){show(idx+1)});
+  document.getElementById('noteBtn').addEventListener('click',toggleNotes);
+  document.getElementById('fullBtn').addEventListener('click',fullscreen);
+  document.addEventListener('keydown',function(e){
+    var k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'||k===' '){e.preventDefault();show(idx+1)}
+    else if(k==='ArrowLeft'||k==='PageUp'){e.preventDefault();show(idx-1)}
+    else if(k==='Home'){show(0)} else if(k==='End'){show(slides.length-1)}
+    else if(k==='n'||k==='N'){toggleNotes()} else if(k==='f'||k==='F'){fullscreen()}
+    else if(k==='Escape'){document.body.classList.remove('show-notes')}
+  });
+  var tx=0;
+  document.addEventListener('touchstart',function(e){tx=e.changedTouches[0].screenX},{passive:true});
+  document.addEventListener('touchend',function(e){var dx=e.changedTouches[0].screenX-tx;if(Math.abs(dx)>70)show(idx+(dx<0?1:-1))},{passive:true});
+
+  /* 控制条空闲时淡出 */
+  var timer; function wake(){document.body.classList.remove('idle');clearTimeout(timer);timer=setTimeout(function(){document.body.classList.add('idle')},2600)}
+  ['mousemove','mousedown','keydown','touchstart'].forEach(function(ev){addEventListener(ev,wake,{passive:true})}); wake();
+
+  if(location.hash.indexOf('#slide-')===0){var n=parseInt(location.hash.slice(7),10);if(isFinite(n))idx=n-1}
+  show(idx);
+})();
+</script>
+</body>
+</html>

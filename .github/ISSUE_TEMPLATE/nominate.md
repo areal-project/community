@@ -2,7 +2,7 @@
 name: Role Nomination
 about: Nominate a candidate for a community role (Member, Approver, or Maintainer)
 title: "Nomination: [Candidate's Name] for [Role]"
-labels: ["nomination", "community"]
+labels: [nomination, community]
 ---
 
 Use this template to nominate a candidate for a community role. See the
