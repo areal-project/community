@@ -14,7 +14,7 @@ For background on how the project is governed and how to participate, please see
 
 | Date       | Agenda | Slides | Recording |
 | ---------- | ------ | ------ | --------- |
-| 2026/10/31 | TBD    | TBD    | TBD       |
+| 2026/11/14 | TBD    | TBD    | TBD       |
 
 ## Past Meetings
 
@@ -30,7 +30,8 @@ For background on how the project is governed and how to participate, please see
 | 2026/08/08 | [Google Doc](https://docs.google.com/document/d/1sc8iWJFOBJlMdn8NLjuIylTxM7smk5mF1uQ6Iyb3wPc/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/13WU1DfPikR1u9wtWZ7B_Nuk80ue9OUPoPbpGJIiOAZw/edit?usp=sharing)                                                                                                                              | [Tencent Meeting (Chinese)](https://meeting.tencent.com/ctm/2YYaZnQo7b) |
 | 2026/08/22 | [Google Doc](https://docs.google.com/document/d/1c7nHm5aGPOsOsx8mW5GV4dZiYSPorvOVVi9N99W0IzQ/edit?usp=sharing) |                                                                                                                                                                                                                                                    | [Tencent Meeting (Chinese)](https://meeting.tencent.com/ctm/2YYaZnQo7f) |
 | 2026/09/19 | [Google Doc](https://docs.google.com/document/d/19d3JxNgHLzQrKdxJbZ1ms83nlCGDAX8AAqTsYJTekqg/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/1T--Xdn8_qtPX16W0haBZNuGE_BN8BkqFtJBeOr_Td7g/edit?usp=sharing)                                                                                                                              |                                                                         |
-| 2026/10/17 | [Google Doc](https://docs.google.com/document/d/1N0XIU9RjTZPb8VxWy0hHYTEBNhG9XCP4lXCUhawTvdM/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/1kaK27lzCHllAc5aypOTZrnD_VzZ4lHvrDZOnj-hi_sw/edit?usp=sharing), [Score Centering HTML](score-centering-2026-10-17.html)                                                                     | [DingTalk transcript (Chinese)][2026-10-17-recording]                   |
+| 2026/10/17 | [Google Doc](https://docs.google.com/document/d/1N0XIU9RjTZPb8VxWy0hHYTEBNhG9XCP4lXCUhawTvdM/edit?usp=sharing) | [Google Slides](https://docs.google.com/presentation/d/1kaK27lzCHllAc5aypOTZrnD_VzZ4lHvrDZOnj-hi_sw/edit?usp=sharing), [Score Centering HTML](20261017/score-centering.html)                                                                       | [DingTalk transcript (Chinese)][2026-10-17-recording]                   |
+| 2026/10/31 | [Google Doc][2026-10-31-agenda]                                                                                | [Google Sliders](https://docs.google.com/presentation/d/1zpgRZcoypmNHLj2FbmrysH9enY6t24EExPJ50sP-240/edit?usp=sharing) [Notes](20261031)                                                                                                           | [DingTalk transcript (Chinese)][2026-10-31-recording]                   |
 
 ## How to Add Materials
 
@@ -45,3 +46,5 @@ After each meeting, add a new row to the **Past Meetings** table with:
   Meeting, DingTalk)
 
 [2026-10-17-recording]: https://shanji.dingtalk.com/app/transcribes/76327569643438393039353834355f343632303933343536335f30
+[2026-10-31-agenda]: https://docs.google.com/document/d/1x2ZY9QffUe66wQTPajFf0sbeRVZmvI74jadjSMXGRB0/edit?tab=t.0#heading=h.6fhpfy9nl2z5
+[2026-10-31-recording]: https://shanji.dingtalk.com/app/transcribes/76327569643530393530323636325f343632303933343536335f30
